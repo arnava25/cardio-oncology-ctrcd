@@ -1,0 +1,13 @@
+Temporal Validation Summary
+========================================
+Train: 337 patients, 36 events
+Test:  145 patients, 11 events
+
+Full C-index:  0.738 (0.655–0.817)
+Train C-index: 0.761 (0.666–0.842)
+Test C-index:  0.672 (0.493–0.831)
+Optimism:      +0.089
+
+Brier (null):  0.0459
+Brier (model): 0.1461
+Scaled IBS:    -2.181
