@@ -3,3 +3,18 @@ venv/
 __pycache__/
 *.pyc
 .DS_Store
+venv/
+.python-version
+BC_cardiotox_clinical_variables.csv
+data/*.csv
+*.pyc
+__pycache__/
+venv/
+.python-version
+BC_cardiotox_clinical_variables.csv
+data/*.csv
+*.pyc
+__pycache__/
+2201.13036v1.pdf
+publication attempts/
+gui.html
