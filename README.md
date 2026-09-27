@@ -1,118 +1,41 @@
-# Predicting Cardiac Dysfunction in HER2-Positive Breast Cancer
+# Cardio-Oncology CTRCD Prediction Model
 
-[![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://python.org)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green)](LICENSE)
+A parsimonious four-variable Cox proportional hazards model for pre-treatment prediction of cancer therapy-related cardiac dysfunction (CTRCD) in HER2-positive breast cancer, developed and internally validated on the publicly available BC_cardiotox dataset (n=531).
 
-## The Problem
+The model uses four routinely available pre-treatment variables — age, resting heart rate, baseline LVEF, and prior anthracycline exposure — and is benchmarked against the HFA-ICOS risk score using discrimination (C-index), calibration, decision curve analysis, and net reclassification improvement. It is a **development study with internal (bootstrap) validation**; external validation has not been performed and is required before any clinical use.
 
-Survival rates for HER2-positive breast cancer have improved dramatically over the past two decades. But the chemotherapy regimens responsible for those gains, particularly trastuzumab and anthracyclines, carry a significant risk of cancer therapy-related cardiac dysfunction (CTRCD): measurable decline in heart function that can force treatment interruption, require lifelong cardiac monitoring, and in some cases become permanent.
+## Key results
 
-Identifying which patients are at high cardiac risk before treatment begins would allow oncologists and cardiologists to personalize surveillance, adjust regimens, or intervene early. The challenge is doing this accurately using information that is routinely available at baseline, without requiring specialized imaging or complex scoring systems.
-
-Existing tools like the HFA-ICOS risk score attempt this, but their clinical utility has not been rigorously benchmarked against modern survival modeling approaches.
-
-This project does that benchmarking, and the results favor a simpler model.
-
-## What This Is
-
-Code and results for the manuscript:
-
-**"A parsimonious Cox proportional hazards model outperforms the HFA-ICOS risk score for prediction of cancer therapy-related cardiac dysfunction in HER2-positive breast cancer"**
-
-The study develops and validates a four-variable Cox proportional hazards model for pre-treatment CTRCD prediction, benchmarks it against the HFA-ICOS score using C-index, decision curve analysis, and net reclassification improvement, and examines performance across subgroups and temporal splits.
-
-## Key Results
-
-| Metric | Four-Variable Cox Model | HFA-ICOS Score |
+| Metric | Cox model | HFA-ICOS |
 |---|---|---|
-| Cross-validated C-index | **0.743** | 0.663 |
-| Bootstrap C-index (95% CI) | **0.831** (0.756 to 0.895) | |
-| NRI vs HFA-ICOS | **+0.625** | reference |
+| Cross-validated C-index | 0.714 | — |
+| Optimism-corrected C-index (95% CI) | **0.723** (0.705 to 0.742) | — |
+| Paired C-index on identical subset (n=477, 46 events) | 0.726 | 0.649 |
+| Paired difference (95% CI) | **+0.077** (-0.006 to +0.162) | |
+| NRI vs HFA-ICOS | +0.625 | |
 
-Risk stratification by tertile:
+Calibration required recalibration: calibration slope 1.52, intercept +1.75; expected/observed ratio 1.00 after in-sample Platt recalibration at the 2-year landmark (n=208, 33 events). The improvement over HFA-ICOS is modest and its confidence interval approaches zero; the model is best read as competitive with, and likely superior to, the consensus score, pending external validation.
 
-| Risk Group | 5-Year CTRCD Incidence |
-|---|---|
-| Low | 2.3% (no new events after year 2) |
-| High | 26.5% |
+## Reproducing the analysis
 
-The model uses four variables available at any standard pre-treatment workup: age, resting heart rate, baseline left ventricular ejection fraction (LVEF), and prior anthracycline exposure. No specialized imaging or proprietary scoring tools required.
+All reported numbers are reproduced from the raw data by a single script:
 
-## Why a Simpler Model Winning Matters
+```
+python analysis.py          # cohort, Table 2, discrimination, CV-lambda, paired comparison, calibration, bake-off, tertiles, Brier
+python figures.py           # Figures 1-3 (KM tertiles, calibration/DCA, subgroups)
+python supp.py              # Supplementary Figure 1 (bootstrap validation) + Central Illustration
+```
 
-The HFA-ICOS score incorporates many variables and was developed by expert consensus. A four-variable Cox model outperforming it on discrimination, calibration, decision curve analysis, and net reclassification is a clinically meaningful finding: it suggests that a model trained directly on outcome data, even with minimal predictors, can extract more prognostic signal than a manually weighted checklist.
-
-This has practical implications. A model this parsimonious is easier to implement in electronic health records, easier to explain to patients, and more likely to generalize across clinical settings.
+`analysis.py` is the single source of truth: it fits the model and computes every reported metric deterministically (seed = 42). The scripts in `scripts/` are retained exploratory analyses (EDA) and are not required to reproduce the manuscript results.
 
 ## Data
 
-Data are from the publicly available BC_cardiotox dataset:
+The BC_cardiotox dataset is publicly available at Figshare (DOI: 10.6084/m9.figshare.22650748). Place `BC_cardiotox_clinical_variables.csv` under `data/` (semicolon-separated, comma decimal). The dataset is not redistributed in this repository.
 
-> Minchole A, Camps J, Cedilnik N, et al. BC_cardiotox: A cardiotoxicity dataset for breast cancer patients. *Sci Data*. 2023;10:542. doi:10.1038/s41597-023-02419-1
+## Model
 
-Download from Figshare: https://doi.org/10.6084/m9.figshare.22650748
+Cox proportional hazards, four predictors, ridge penalty (λ=0.1; cross-validation-selected λ=0.05 gives materially unchanged performance). Coefficients (per unit): age HR 1.019, resting heart rate HR 1.018, baseline LVEF HR 0.978, prior anthracycline exposure HR 1.778.
 
-Place downloaded files in a `data/` directory at the project root before running any scripts.
+## Citation
 
-## Installation
-
-```bash
-git clone https://github.com/arnava25/cardio-oncology-ctrcd.git
-cd cardio-oncology-ctrcd
-pip install -r requirements.txt
-```
-
-Key dependencies: `lifelines`, `scikit-learn`, `pandas`, `numpy`, `matplotlib`, `scipy`
-
-## Scripts
-
-Run in order from the project root:
-
-| Script | Description |
-|---|---|
-| `01_eda.py` | Exploratory data analysis |
-| `02_baseline_cox.py` | HFA-ICOS benchmark and baseline Cox model |
-| `02b_sensitivity_analysis.py` | Sensitivity analyses |
-| `03_random_survival_forest.py` | Random survival forest comparison |
-| `04_tdi_waveform_model.py` | TDI waveform feature extraction |
-| `05_fusion_model.py` | Fusion model (tabular + waveform) |
-| `06_calibration_and_decision_curves.py` | Calibration and decision curve analysis (Figure 2) |
-| `07_model_refinement.py` | Recalibration, bootstrap CIs, NRI, e analysis (Figure 5) |
-| `08_competing_risks.py` | Fine-Gray competing risks analysis (Figure 4) |
-| `09_subgroup_analyses.py` | Subgroup analyses (Figure 3) |
-| `10_temporal_validation.py` | Temporal split validation |
-| `figure1_km_tertiles.py` | Kaplan-Meier cumulative incidence by risk tertile (Figure 1) |
-
-## Output
-
-Figures are saved to `results/`. The full analysis pipeline reproduces all manuscript figures and tables.
-
-## Repository Structure
-
-```
-cardio-oncology-ctrcd/
-├── scripts/
-│   ├── 01_eda.py
-│   ├── 02_baseline_cox.py
-│   ├── 02b_sensitivity_analysis.py
-│   ├── 03_random_survival_forest.py
-│   ├── 04_tdi_waveform_model.py
-│   ├── 05_fusion_model.py
-│   ├── 06_calibration_and_decision_curves.py
-│   ├── 07_model_refinement.py
-│   ├── 08_competing_risks.py
-│   ├── 09_subgroup_analyses.py
-│   ├── 10_temporal_validation.py
-│   └── figure1_km_tertiles.py
-├── results/
-├── data/
-└── README.md
-```
-
-## License
-
-MIT License. See [LICENSE](LICENSE) for details.
-
-## Contact
-
-Questions, collaborations, or feedback welcome. Open an issue or reach out via GitHub.
+Amit A. A Parsimonious Cox Model Outperforms HFA-ICOS for Cardiotoxicity Prediction in HER2-Positive Breast Cancer. (Under review.)
