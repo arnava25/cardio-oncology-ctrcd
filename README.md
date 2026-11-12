@@ -2,7 +2,7 @@
 
 A parsimonious four-variable Cox proportional hazards model for pre-treatment prediction of cancer therapy-related cardiac dysfunction (CTRCD) in HER2-positive breast cancer, developed and internally validated on the publicly available BC_cardiotox dataset (n=531).
 
-The model uses four routinely available pre-treatment variables — age, resting heart rate, baseline LVEF, and prior anthracycline exposure — and is benchmarked against the HFA-ICOS risk score using discrimination (C-index), calibration, decision curve analysis, and net reclassification improvement. It is a **development study with internal (bootstrap) validation**; external validation has not been performed and is required before any clinical use.
+The model uses four routinely available pre-treatment variables (age, resting heart rate, baseline LVEF, and prior anthracycline exposure) and is benchmarked against the HFA-ICOS risk score using discrimination (C-index), calibration, decision curve analysis, and net reclassification improvement. It is a **development study with internal (bootstrap) validation**; external validation has not been performed and is required before any clinical use.
 
 ## Key results
 
